@@ -71,7 +71,7 @@ public class AlternativePlaylist implements CallBackDownload{
             e.printStackTrace();
         }
         Log.e(TAG, TAG + listSegments.size());
-		activity.adjustStream(downloaded);
+		activity.adjustStream(downloaded * 100);
 	}
 	
 	public void startDownload(){		

@@ -69,7 +69,7 @@ public class MasterPlaylist implements CallBackDownload{
         	Log.e(TAG,e.toString());
         }
 		
-		activity.adjustStream(downloaded);
+		activity.adjustStream(downloaded * 100);
 	}
 	
 	public void startDownload(){		
@@ -85,9 +85,9 @@ public class MasterPlaylist implements CallBackDownload{
 			if(listStreams.get(i).bandwidth < listStreams.get(bestStream).bandwidth)
 				bestStream = i;
 		
-/*		for(int i = 0; i < listStreams.size(); i++)
+		for(int i = 0; i < listStreams.size(); i++)
 			if(listStreams.get(i).bandwidth <= bandwidth && listStreams.get(i).bandwidth > listStreams.get(bestStream).bandwidth)
-				bestStream = i;*/
+				bestStream = i;
 		
 		
 		return listStreams.get(bestStream).getSegment(index);

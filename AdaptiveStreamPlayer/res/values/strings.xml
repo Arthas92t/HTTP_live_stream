@@ -2,19 +2,19 @@
 <resources>
 
     <string name="app_name">Adaptive Stream Player</string>
-    
     <string name="first_video">bippop test video</string>
-    
     <string name="title_activity_main">MainActivity</string>
-    
     <string name="back">Back</string>
     <string name="settings">Settings</string>
     <string name="default_tests">Default tests</string>
     <string name="server_tests">Server test</string>
-    
     <string name="default_player">Default player</string>
     <string name="custom_player">Custom player</string>
-    
     <string name="hello_world">Hello world!</string>
+    <string name="title_activity_main_activity1">MainActivity1</string>
+    <string name="action_settings">Settings</string>
+    <string name="title_section1">Section 1</string>
+    <string name="title_section2">Section 2</string>
+    <string name="title_section3">Section 3</string>
 
 </resources>
