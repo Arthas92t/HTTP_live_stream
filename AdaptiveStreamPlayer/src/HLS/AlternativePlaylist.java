@@ -79,11 +79,9 @@ public class AlternativePlaylist implements CallBackDownload{
 		downloader.execute(url);				
 	}
 	
-	public String getSegment(int index){
-		Log.e(TAG, "get segment");
-		if (listSegments != null)
-				return listSegments.get(index).url;
-		Log.e(TAG, "download Alternative Playlist");
+	public Segment getSegment(int index){
+		if (listSegments != null && listSegments.size() > index)
+				return listSegments.get(index);
 		startDownload();
 		return null;
 	}

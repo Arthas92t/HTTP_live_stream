@@ -5,7 +5,9 @@ import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import HLS.AlternativePlaylist;
 import HLS.MasterPlaylist;
+import HLS.Segment;
 import android.app.Activity;
 import android.app.Dialog;
 import android.app.ProgressDialog;
@@ -26,6 +28,7 @@ public class CustomPlayActivity extends Activity {
 	public int downloadedSegment;
 	public List<File> listFiles;
 
+	private List<Boolean> changedStream;
 	private SegmentSwitcher segmentSwitcher;
 	private String TAG = "ShowPlayListActivity";
 	private String url;
@@ -37,6 +40,8 @@ public class CustomPlayActivity extends Activity {
     VideoSink mJavaMediaPlayerVideoSink;
     VideoSink mNativeMediaPlayerVideoSink;
     private boolean playing;
+    private AlternativePlaylist oldStream;
+    private DownloadSegmentTask downloader;
 
     SurfaceHolderVideoSink mSurfaceHolder1VideoSink, mSurfaceHolder2VideoSink;
 //	private SurfaceView videoView;
@@ -56,6 +61,7 @@ public class CustomPlayActivity extends Activity {
 		
 		downloadedSegment = -1;
 		listFiles = new ArrayList<File>();
+		changedStream = new ArrayList<Boolean>();
 		segmentSwitcher = new SegmentSwitcher();
 		File file = new File(Environment.getExternalStoragePublicDirectory(
 	            "/"), "AdaptiveCache");
@@ -146,15 +152,27 @@ public class CustomPlayActivity extends Activity {
 		Thread loadSegmentThread = new Thread(new Runnable(){
 			public void run() {
 		        createStreamingMediaPlayer(listFiles.get(0).getPath());
+		        changedStream.remove(0);
 		        listFiles.remove(0);
 		        playing = true;
 		        setPlayingStreamingMediaPlayer(true);
 				while(playing){
+					waitForEnd();
 					if(listFiles.size()>0){
 						File file = listFiles.get(0);
 						listFiles.remove(0);
-						Log.e(TAG, file.getPath());
-						nextSegment(file.getPath());
+						Log.e(TAG, "change stream " + file.getPath()+ changedStream.get(0).booleanValue());
+						nextSegment(file.getPath(), changedStream.get(0).booleanValue());
+				        changedStream.remove(0);
+					}else{
+						downloader.cancel(true);
+						changedStream.remove(0);
+						totalDownloaded = 0;
+						beginDownload =  System.currentTimeMillis();
+						adjustStream(0);
+						unlockWait();
+						while(listFiles.size()<=0){
+						}
 					}
 				}
 			}
@@ -163,14 +181,20 @@ public class CustomPlayActivity extends Activity {
 	}
 	
 	public void adjustStream(long downloaded){
-		Log.e(TAG, "adjust stream, downloaded: " + downloaded);
+//		Log.e(TAG, "adjust stream, downloaded: " + downloaded);
 		totalDownloaded = totalDownloaded + downloaded;
-		totalTime = System.currentTimeMillis()- beginDownload;
-		String nextSegment = masterPlaylist.getSegment(totalDownloaded * 1000 / totalTime, downloadedSegment + 1);
+		totalTime = System.currentTimeMillis()- beginDownload + 1;
+		AlternativePlaylist newStream = masterPlaylist.getStream(totalDownloaded * 1000 / totalTime);
+		Segment nextSegment = masterPlaylist.getSegment(totalDownloaded * 1000 / totalTime, downloadedSegment + 1);
 		if(nextSegment != null){
-			Log.e(TAG, "adjust stream");
-			DownloadSegmentTask downloader = new DownloadSegmentTask(this);
-			downloader.execute(nextSegment);
+//			Log.e(TAG, "adjust stream");
+			downloader = new DownloadSegmentTask(this);
+			downloader.execute(nextSegment.url);
+			if(oldStream == null)
+				oldStream = newStream;
+//			Log.e(TAG, "check band" + oldStream.bandwidth+ " \n"+newStream.bandwidth+ "\n"+nextSegment.url);
+			changedStream.add(new Boolean(oldStream.bandwidth != newStream.bandwidth));
+			oldStream = newStream;
 			if(!playing && listFiles.size() > 0)
 				resumePlay();
 		}
@@ -182,8 +206,10 @@ public class CustomPlayActivity extends Activity {
     public static native void setPlayingStreamingMediaPlayer(boolean isPlaying);
     public static native void shutdown();
     public static native void setSurface(Surface surface);
-    public static native void nextSegment(String filename);
-
+    public static native void nextSegment(String filename, boolean switchStream);
+    public static native void waitForEnd();
+    public static native void unlockWait();
+    
     // VideoSink abstracts out the difference between Surface and SurfaceTexture
     // aka SurfaceHolder and GLSurfaceView
     static abstract class VideoSink {

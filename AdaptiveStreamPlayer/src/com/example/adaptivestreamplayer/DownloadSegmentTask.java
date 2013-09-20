@@ -51,9 +51,8 @@ public class DownloadSegmentTask extends AsyncTask <String, Integer, Integer>{
 	}
 	
 	private String saveToFile(InputStream input){
-		activity.downloadedSegment++;
 		file = new File(Environment.getExternalStoragePublicDirectory(
-	            "/AdaptiveCache/"), ""+activity.downloadedSegment);
+	            "/AdaptiveCache/"), ""+(activity.downloadedSegment+1));
 		try {
 			FileOutputStream output = new FileOutputStream(file);
 			int read = 0;
@@ -66,8 +65,8 @@ public class DownloadSegmentTask extends AsyncTask <String, Integer, Integer>{
 			output.close();
 			input.close();
 			activity.listFiles.add(file);
+			activity.downloadedSegment++;
 			publishProgress(null);
-			Log.e(TAG, "number of file: "+activity.listFiles.size());
 		} catch (Exception e) {
 			Log.e(TAG, e.toString());
 		}

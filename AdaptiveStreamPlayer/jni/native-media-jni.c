@@ -117,8 +117,8 @@ static XAresult AndroidBufferQueueCallback(
     XAresult res;
     int ok;
     char buffer[50];
-    sprintf( buffer, "buffer %d %d", dataSize, dataUsed);
-    LOGE(buffer);
+//    sprintf( buffer, "buffer %d %d", dataSize, dataUsed);
+//    LOGE(buffer);
     // pCallbackContext was specified as NULL at RegisterCallback and is unused here
     assert(NULL == pCallbackContext);
 
@@ -127,24 +127,24 @@ static XAresult AndroidBufferQueueCallback(
     assert(0 == ok);
 
     // was a discontinuity requested?
-    if (discontinuity) {
+/*    if (discontinuity) {
         // Note: can't rewind after EOS, which we send when reaching EOF
         // (don't send EOS if you plan to play more content through the same player)
-        if (!reachedEof) {
+//        if (!reachedEof) {
             // clear the buffer queue
-            res = (*playerBQItf)->Clear(playerBQItf);
-            assert(XA_RESULT_SUCCESS == res);
+//            res = (*playerBQItf)->Clear(playerBQItf);
+//            assert(XA_RESULT_SUCCESS == res);
             // rewind the data source so we are guaranteed to be at an appropriate point
-            rewind(file);
+//            rewind(file);
             // Enqueue the initial buffers, with a discontinuity indicator on first buffer
             (void) enqueueInitialBuffers(JNI_TRUE);
-        }
+//        }
         // acknowledge the discontinuity request
         discontinuity = JNI_FALSE;
         ok = pthread_cond_signal(&cond);
         assert(0 == ok);
         goto exit;
-    }
+    }*/
 
     if ((pBufferData == NULL) && (pBufferContext != NULL)) {
         const int processedCommand = *(int *)pBufferContext;
@@ -173,11 +173,24 @@ static XAresult AndroidBufferQueueCallback(
         }
         size_t packetsRead = bytesRead / MPEG2_TS_PACKET_SIZE;
         size_t bufferSize = packetsRead * MPEG2_TS_PACKET_SIZE;
-        res = (*caller)->Enqueue(caller, NULL /*pBufferContext*/,
-                pBufferData /*pData*/,
-                bufferSize /*dataLength*/,
-                NULL /*pMsg*/,
-                0 /*msgLength*/);
+        if(!discontinuity)
+			res = (*caller)->Enqueue(caller, NULL /*pBufferContext*/,
+					pBufferData /*pData*/,
+					bufferSize /*dataLength*/,
+					NULL /*pMsg*/,
+					0 /*msgLength*/);
+        else{
+        	LOGE("FORMAT CHANGE");
+            XAAndroidBufferItem items[1];
+            items[0].itemKey = XA_ANDROID_ITEMKEY_FORMAT_CHANGE;
+            items[0].itemSize = 0;
+            res = (*playerBQItf)->Enqueue(playerBQItf,(void *)&kEosBufferCntxt,
+            		pBufferData /*pData*/,
+            		bufferSize /*dataLength*/,
+                    items /*pMsg*/,
+                    sizeof(XAuint32)*2 /*msgLength*/);
+            discontinuity = JNI_FALSE;
+        }
         assert(XA_RESULT_SUCCESS == res);
     } else {
         // EOF or I/O error, signal EOS
@@ -191,7 +204,9 @@ static XAresult AndroidBufferQueueCallback(
                 msgEos ,
                 sizeof(XAuint32)*2);
         assert(XA_RESULT_SUCCESS == res);*/
+    	res = (*playerPlayItf)->SetPlayState(playerPlayItf, XA_PLAYSTATE_PAUSED);
     	pthread_mutex_unlock(&mutexNextFile);
+    	pthread_mutex_lock(&mutex);
         LOGE("end file");
     }
 
@@ -530,18 +545,27 @@ void Java_com_example_adaptivestreamplayer_CustomPlayActivity_rewindStreamingMed
     }
 }
 void Java_com_example_adaptivestreamplayer_CustomPlayActivity_nextSegment(JNIEnv* env,
-        jclass clazz, jstring filename){
+        jclass clazz, jstring filename, jboolean switchStream){
 
-	pthread_mutex_lock(&mutexNextFile);
-	pthread_mutex_lock(&mutex);
+//	pthread_mutex_lock(&mutex);
 	LOGE("update file");
-	LOGE((*env)->GetStringUTFChars(env, filename, 0));
+	discontinuity = JNI_FALSE;
+	if(switchStream)
+		discontinuity = JNI_TRUE;
 	fclose(file);
     const char *utf8 = (*env)->GetStringUTFChars(env, filename, NULL);
     assert(NULL != utf8);
-    // open the file to play
     file = fopen(utf8, "rb");
-    // signal discontinuity
-    //    discontinuity = true;
 	pthread_mutex_unlock(&mutex);
+	(*playerPlayItf)->SetPlayState(playerPlayItf, XA_PLAYSTATE_PLAYING);
+}
+
+void Java_com_example_adaptivestreamplayer_CustomPlayActivity_waitForEnd(JNIEnv* env,
+        jclass clazz){
+	pthread_mutex_lock(&mutexNextFile);
+}
+
+void Java_com_example_adaptivestreamplayer_CustomPlayActivity_unlockWait(JNIEnv* env,
+        jclass clazz){
+	pthread_mutex_unlock(&mutexNextFile);
 }

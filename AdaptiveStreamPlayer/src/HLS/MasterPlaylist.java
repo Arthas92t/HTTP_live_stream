@@ -60,7 +60,7 @@ public class MasterPlaylist implements CallBackDownload{
             		line = buffer.readLine();
 
             		downloaded = downloaded + line.length();
-            		Log.e(TAG, "bandwidth: " + requiredBandwidth + "\n URL: " + absoluteURL(line));
+//            		Log.e(TAG, "bandwidth: " + requiredBandwidth + "\n URL: " + absoluteURL(line));
             		listStreams.add(new AlternativePlaylist(activity, requiredBandwidth, absoluteURL(line)));
             	}
             }
@@ -77,8 +77,13 @@ public class MasterPlaylist implements CallBackDownload{
 		downloader.execute(url);
 	}
 	
-	public String getSegment(float bandwidth, int index){
-		Log.e(TAG, "curent bandwidth: "+ bandwidth);
+	public Segment getSegment(float bandwidth, int index){		
+		
+		return getStream(bandwidth).getSegment(index);
+	}	
+	
+	public AlternativePlaylist getStream(float bandwidth){
+//		Log.e(TAG, "curent bandwidth: "+ bandwidth);
 		int bestStream = 0;
 		bandwidth = bandwidth*8;
 		for(int i = 0; i < listStreams.size(); i++)
@@ -90,6 +95,6 @@ public class MasterPlaylist implements CallBackDownload{
 				bestStream = i;
 		
 		
-		return listStreams.get(bestStream).getSegment(index);
+		return listStreams.get(bestStream);
 	}	
 }
