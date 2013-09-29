@@ -40,9 +40,12 @@ public class DownloadSegmentTask extends AsyncTask <String, Integer, Integer>{
 		HttpResponse response;
 		while(true){
 			try{
+				if(this.isCancelled())
+					return;
 				response = client.execute(httpget);
 				HttpEntity entity = response.getEntity();
 				saveToFile(entity.getContent());
+				Log.e(TAG, "FINISH " + url);
 				return;
 			}catch(Exception e){
 				Log.e(TAG, e.toString());
@@ -50,7 +53,7 @@ public class DownloadSegmentTask extends AsyncTask <String, Integer, Integer>{
 		}
 	}
 	
-	private String saveToFile(InputStream input){
+	private void saveToFile(InputStream input){
 		file = new File(Environment.getExternalStoragePublicDirectory(
 	            "/AdaptiveCache/"), ""+(activity.downloadedSegment+1));
 		try {
@@ -64,12 +67,14 @@ public class DownloadSegmentTask extends AsyncTask <String, Integer, Integer>{
 			
 			output.close();
 			input.close();
+			if(this.isCancelled())
+				return;
 			activity.listFiles.add(file);
 			activity.downloadedSegment++;
 			publishProgress(null);
 		} catch (Exception e) {
 			Log.e(TAG, e.toString());
 		}
-		return null;
+		return;
 	}
 }

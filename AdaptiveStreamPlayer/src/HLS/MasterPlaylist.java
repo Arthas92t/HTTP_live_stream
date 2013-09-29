@@ -20,6 +20,7 @@ public class MasterPlaylist implements CallBackDownload{
 	private String TAG = "MasterPlaylist";
 	private String STREAM_INF = "#EXT-X-STREAM-INF:";
 	private String BANDWIDTH = "BANDWIDTH";
+	int x = 0;
 	
 	public MasterPlaylist(CustomPlayActivity activity, String url){
 		this.url = url;
@@ -60,7 +61,7 @@ public class MasterPlaylist implements CallBackDownload{
             		line = buffer.readLine();
 
             		downloaded = downloaded + line.length();
-//            		Log.e(TAG, "bandwidth: " + requiredBandwidth + "\n URL: " + absoluteURL(line));
+            		Log.e(TAG, "bandwidth: " + requiredBandwidth + "\n URL: " + absoluteURL(line));
             		listStreams.add(new AlternativePlaylist(activity, requiredBandwidth, absoluteURL(line)));
             	}
             }
@@ -86,6 +87,7 @@ public class MasterPlaylist implements CallBackDownload{
 //		Log.e(TAG, "curent bandwidth: "+ bandwidth);
 		int bestStream = 0;
 		bandwidth = bandwidth*8;
+		Log.e(TAG,"bandwidth: " + bandwidth);
 		for(int i = 0; i < listStreams.size(); i++)
 			if(listStreams.get(i).bandwidth < listStreams.get(bestStream).bandwidth)
 				bestStream = i;
@@ -93,7 +95,6 @@ public class MasterPlaylist implements CallBackDownload{
 		for(int i = 0; i < listStreams.size(); i++)
 			if(listStreams.get(i).bandwidth <= bandwidth && listStreams.get(i).bandwidth > listStreams.get(bestStream).bandwidth)
 				bestStream = i;
-		
 		
 		return listStreams.get(bestStream);
 	}	

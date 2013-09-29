@@ -1,12 +1,56 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical" >
+    <ImageView 
+        android:id = "@+id/logo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:contentDescription="@string/logo"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="40dp"
+        android:src="@drawable/logo"/>
+    <EditText
+        android:inputType="textUri"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/custom_url"
+    	android:layout_below="@id/logo"/>
 	<Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/first_video"
-        android:onClick="play"/>
-
-</LinearLayout>
+        android:text="@string/play"
+        android:onClick="playURL"
+        android:layout_below="@id/custom_url"
+        android:id="@+id/play_url"/>
+	<Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/default_player"
+        android:onClick="defaultPlayerURL"
+        android:layout_toRightOf="@id/play_url"
+        android:layout_below="@id/custom_url"
+        android:id="@+id/default_play_url"/>
+	<Spinner
+	    android:id="@+id/source_spinner"
+	    android:layout_width="fill_parent"
+	    android:layout_height="wrap_content"
+	    android:text=""
+    	android:layout_below="@id/play_url"/>
+	<Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/play"
+        android:onClick="play"
+        android:layout_below="@id/source_spinner"
+        android:id="@+id/play"/>
+	<Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/default_player"
+        android:onClick="defaultPlayer"
+        android:layout_toRightOf="@id/play"
+        android:layout_below="@id/source_spinner"
+        android:id="@+id/default_player"/>
+</RelativeLayout>

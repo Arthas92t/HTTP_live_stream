@@ -1,7 +1,6 @@
 package com.example.adaptivestreamplayer;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.InputStream;
 
 import org.apache.http.HttpEntity;
@@ -11,7 +10,6 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
 
 import android.os.AsyncTask;
-import android.os.Environment;
 import android.util.Log;
 
 public class DownloadPlaylistTask extends AsyncTask <String, InputStream, Integer>{

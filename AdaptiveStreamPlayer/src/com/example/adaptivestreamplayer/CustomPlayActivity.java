@@ -13,7 +13,6 @@ import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.graphics.SurfaceTexture;
-import android.media.AudioTrack;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Environment;
@@ -39,9 +38,10 @@ public class CustomPlayActivity extends Activity {
     VideoSink mSelectedVideoSink;
     VideoSink mJavaMediaPlayerVideoSink;
     VideoSink mNativeMediaPlayerVideoSink;
-    private boolean playing;
+    private boolean playing, endActivity;
     private AlternativePlaylist oldStream;
     private DownloadSegmentTask downloader;
+    private Thread loadSegmentThread;
 
     SurfaceHolderVideoSink mSurfaceHolder1VideoSink, mSurfaceHolder2VideoSink;
 //	private SurfaceView videoView;
@@ -59,6 +59,7 @@ public class CustomPlayActivity extends Activity {
 		Intent intent = getIntent();
 		url = intent.getStringExtra(MainActivity.EXTRA_URL);
 		
+        endActivity = false;
 		downloadedSegment = -1;
 		listFiles = new ArrayList<File>();
 		changedStream = new ArrayList<Boolean>();
@@ -134,6 +135,10 @@ public class CustomPlayActivity extends Activity {
     protected void onDestroy()
     {
         shutdown();
+        if(loadSegmentThread != null)
+        	loadSegmentThread.interrupt();
+        endActivity = true;
+        Log.e(TAG,"end CustomPlayerActivity");
         super.onDestroy();
     }
 
@@ -149,7 +154,7 @@ public class CustomPlayActivity extends Activity {
 	
 	public void resumePlay(){
 		dismissDialog(0);
-		Thread loadSegmentThread = new Thread(new Runnable(){
+		loadSegmentThread = new Thread(new Runnable(){
 			public void run() {
 		        createStreamingMediaPlayer(listFiles.get(0).getPath());
 		        changedStream.remove(0);
@@ -158,6 +163,7 @@ public class CustomPlayActivity extends Activity {
 		        setPlayingStreamingMediaPlayer(true);
 				while(playing){
 					waitForEnd();
+					Log.e(TAG, "list file" + listFiles.size()+ "list change" + changedStream.size());
 					if(listFiles.size()>0){
 						File file = listFiles.get(0);
 						listFiles.remove(0);
@@ -167,6 +173,7 @@ public class CustomPlayActivity extends Activity {
 					}else{
 						downloader.cancel(true);
 						changedStream.remove(0);
+						changedStream.add(new Boolean(true));
 						totalDownloaded = 0;
 						beginDownload =  System.currentTimeMillis();
 						adjustStream(0);
@@ -182,6 +189,8 @@ public class CustomPlayActivity extends Activity {
 	
 	public void adjustStream(long downloaded){
 //		Log.e(TAG, "adjust stream, downloaded: " + downloaded);
+		if(endActivity)
+			return;
 		totalDownloaded = totalDownloaded + downloaded;
 		totalTime = System.currentTimeMillis()- beginDownload + 1;
 		AlternativePlaylist newStream = masterPlaylist.getStream(totalDownloaded * 1000 / totalTime);
@@ -192,7 +201,7 @@ public class CustomPlayActivity extends Activity {
 			downloader.execute(nextSegment.url);
 			if(oldStream == null)
 				oldStream = newStream;
-//			Log.e(TAG, "check band" + oldStream.bandwidth+ " \n"+newStream.bandwidth+ "\n"+nextSegment.url);
+			Log.e(TAG, "check band" + oldStream.bandwidth+ " \n"+newStream.bandwidth+ "\n"+nextSegment.url);
 			changedStream.add(new Boolean(oldStream.bandwidth != newStream.bandwidth));
 			oldStream = newStream;
 			if(!playing && listFiles.size() > 0)

@@ -16,5 +16,12 @@
     <string name="title_section1">Default test</string>
     <string name="title_section2">Custom test</string>
     <string name="title_section3">Setting</string>
-
+    <string name="logo">Viettel logo</string>
+    <string-array name="source_array">
+        <item>Bipbop Test</item>
+        <item>Tập đoàn Viettel</item>
+        <item>Viettel và các con số</item>
+        <item>Điện thoại Viettel</item>
+    </string-array>
+    
 </resources>

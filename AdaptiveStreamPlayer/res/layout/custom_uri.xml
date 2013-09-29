@@ -7,7 +7,6 @@
         android:inputType="textUri"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:onClick="playCustom"
         android:id="@+id/custom_url"/>
 	<Button
         android:layout_width="wrap_content"
